@@ -4,32 +4,51 @@ use smol::io::{Error as SmolError, ErrorKind};
 #[cfg(feature = "tokio")]
 use tokio::io::{Error as TokioError, ErrorKind};
 
+#[doc = include_str!("../README.md")]
+
+/// A Result type which takes a generic value for the `Ok()` field and [XorError] for the `Err()` field
 pub type XorResult<'x, T> = Result<T, XorError<'x>>;
 
+/// Errors that supports Equality and Ordering operations
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum XorError<'x> {
+    /// The async version of `std::io::ErrorKind`
     Io(ErrorKind),
+    /// An invalid file path
     FilePath(String),
-    FilePathExt {
-        cause: String,
-        path: String,
-    },
+    /// An invalid file extension
+    FilePathExt { cause: String, path: String },
+    /// An unsupported Image format that could be supported in the future
     UnsupportedImageFormat,
+    /// The file exceeded the maximum file size specified in the config settings
     FileSizeExceeded {
         capacity_allowed: u64,
         size_encountered: u64,
     },
+    /// An unsupported encoding or compression format
     UnsupportedFormat(&'x str),
+    /// An unsupported string encoding format. This error is produced when trying to convert some bytes
+    /// into a format like Lz4 which produces a `Vec<u8>` as return type yet the return type required is that of a `String`
     UnsupportedStringEncoding(&'x str),
+    /// An unsupported string encoding format. This error is produced when trying to convert some bytes
+    /// into a format like Bas64 which produces a `String` as return type yet the return type required is that of a `Vec<u8>`
     UnsupportedBinaryEncoding(&'x str),
+    /// An unsupported string decoding format. This error is produced when trying to convert some bytes
+    /// into a format like Lz4 which produces a `Vec<u8>` as return type yet the return type required is that of a `String`
     UnsupportedDecodeString(&'x str),
+    /// An unsupported string decoding format. This error is produced when trying to convert some bytes
+    /// into a format like Lz4 which produces a `Vec<u8>` as return type yet the return type required is that of a `String`
     UnsupportedDecodeBinary(&'x str),
+    /// An error that mirros the error from `base64` crate
     #[cfg(feature = "base64")]
     Base64(Base64DecodeError),
+    /// An error that mirrors the error from the `hex` crate
     #[cfg(feature = "hex")]
     Hex(HexError),
+    /// An error that mirrors the error from `z85` crate
     #[cfg(feature = "z85")]
     Z85(Z85DecodeError),
+    /// An error that mirrors the error from `lz4_flex` crate
     #[cfg(feature = "lz4")]
     Lz4(Lz4Error),
 }
